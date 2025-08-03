@@ -2,6 +2,7 @@ package com.theonewhocodes.AlgoQuora.services;
 
 import com.theonewhocodes.AlgoQuora.dto.QuestionRequestDTO;
 import com.theonewhocodes.AlgoQuora.dto.QuestionResponseDTO;
+import com.theonewhocodes.AlgoQuora.exceptions.QuestionNotFoundException;
 import com.theonewhocodes.AlgoQuora.mapper.QuestionMapper;
 import com.theonewhocodes.AlgoQuora.models.Question;
 import com.theonewhocodes.AlgoQuora.repositories.QuestionRepository;
@@ -31,5 +32,21 @@ public class QuestionServiceImpl implements IQuestionService{
                 .map(QuestionMapper::toResponseDTO)
                 .doOnSuccess(savedQuestion -> System.out.println("Question created: " + savedQuestion.getTitle()))
                 .doOnError(error -> System.err.println("Error creating question: " + error.getMessage()));
+    }
+
+    @Override
+    public Mono<QuestionResponseDTO> getQuestionById(String id) {
+        return questionRepository.findById(id)
+                .map(QuestionMapper::toResponseDTO)
+                .doOnSuccess(question -> {
+                    if (question != null) {
+                        System.out.println("Retrieved question: " + question.getTitle());
+                    }
+                })
+                .onErrorResume(error -> {
+                    System.err.println("Error retrieving question: " + error.getMessage());
+                    return Mono.error(new RuntimeException("An unexpected error occurred while retrieving the question"));
+                })
+                .switchIfEmpty(Mono.error(new QuestionNotFoundException("Question not found with id: " + id)));
     }
 }
