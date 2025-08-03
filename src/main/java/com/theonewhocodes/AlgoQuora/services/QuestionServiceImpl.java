@@ -8,6 +8,7 @@ import com.theonewhocodes.AlgoQuora.models.Question;
 import com.theonewhocodes.AlgoQuora.repositories.QuestionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
@@ -48,5 +49,14 @@ public class QuestionServiceImpl implements IQuestionService{
                     return Mono.error(new RuntimeException("An unexpected error occurred while retrieving the question"));
                 })
                 .switchIfEmpty(Mono.error(new QuestionNotFoundException("Question not found with id: " + id)));
+    }
+
+    @Override
+    public Flux<QuestionResponseDTO> getAllQuestions() {
+        return questionRepository.findAll()
+                .map(QuestionMapper::toResponseDTO)
+                .doOnComplete(() -> System.out.println("All questions retrieved successfully"))
+                .doOnError(error -> Flux.error(new RuntimeException("An unexpected error occurred while retrieving all questions: " + error.getMessage())))
+                .switchIfEmpty(Flux.error(new QuestionNotFoundException("No questions found")));
     }
 }

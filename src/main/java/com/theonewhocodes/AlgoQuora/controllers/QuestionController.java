@@ -5,6 +5,7 @@ import com.theonewhocodes.AlgoQuora.dto.QuestionResponseDTO;
 import com.theonewhocodes.AlgoQuora.services.IQuestionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RequestMapping("/api/questions")
@@ -22,5 +23,10 @@ public class QuestionController {
     @GetMapping("/{id}")
     public Mono<QuestionResponseDTO> getQuestionById(@PathVariable String id) {
         return questionService.getQuestionById(id);
+    }
+
+    @GetMapping()
+    public Flux<QuestionResponseDTO> getAllQuestions() {
+       return questionService.getAllQuestions();
     }
 }
