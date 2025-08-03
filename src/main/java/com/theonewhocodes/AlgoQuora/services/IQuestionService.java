@@ -1,5 +1,6 @@
 package com.theonewhocodes.AlgoQuora.services;
 
+import com.theonewhocodes.AlgoQuora.dto.PagedQuestionResponseDTO;
 import com.theonewhocodes.AlgoQuora.dto.QuestionRequestDTO;
 import com.theonewhocodes.AlgoQuora.dto.QuestionResponseDTO;
 import reactor.core.publisher.Flux;
@@ -13,5 +14,5 @@ public interface IQuestionService {
 
     Flux<QuestionResponseDTO> getAllQuestions();
 
-    Flux<QuestionResponseDTO> searchQuestions(String query, int page, int size);
+    Mono<PagedQuestionResponseDTO> searchQuestions(String query, int page, int size);
 }

@@ -1,5 +1,6 @@
 package com.theonewhocodes.AlgoQuora.controllers;
 
+import com.theonewhocodes.AlgoQuora.dto.PagedQuestionResponseDTO;
 import com.theonewhocodes.AlgoQuora.dto.QuestionRequestDTO;
 import com.theonewhocodes.AlgoQuora.dto.QuestionResponseDTO;
 import com.theonewhocodes.AlgoQuora.services.IQuestionService;
@@ -31,7 +32,7 @@ public class QuestionController {
     }
 
     @GetMapping("/search")
-    public Flux<QuestionResponseDTO> searchQuestions(
+    public Mono<PagedQuestionResponseDTO> searchQuestions(
             @RequestParam String query, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "5") int size) {
         return questionService.searchQuestions(query, page, size);
     }

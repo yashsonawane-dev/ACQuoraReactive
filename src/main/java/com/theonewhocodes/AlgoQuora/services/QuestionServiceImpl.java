@@ -1,5 +1,6 @@
 package com.theonewhocodes.AlgoQuora.services;
 
+import com.theonewhocodes.AlgoQuora.dto.PagedQuestionResponseDTO;
 import com.theonewhocodes.AlgoQuora.dto.QuestionRequestDTO;
 import com.theonewhocodes.AlgoQuora.dto.QuestionResponseDTO;
 import com.theonewhocodes.AlgoQuora.exceptions.QuestionNotFoundException;
@@ -7,12 +8,15 @@ import com.theonewhocodes.AlgoQuora.mapper.QuestionMapper;
 import com.theonewhocodes.AlgoQuora.models.Question;
 import com.theonewhocodes.AlgoQuora.repositories.QuestionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -62,12 +66,28 @@ public class QuestionServiceImpl implements IQuestionService {
     }
 
     @Override
-    public Flux<QuestionResponseDTO> searchQuestions(String query, int page, int size) {
+    public Mono<PagedQuestionResponseDTO> searchQuestions(String query, int page, int size) {
         Pageable pageable = Pageable.ofSize(size).withPage(page);
-        return questionRepository.findByTitleContainingIgnoreCase(query, pageable)
-                .map(QuestionMapper::toResponseDTO)
-                .doOnComplete(() -> System.out.println("Search completed for query: " + query))
-                .doOnError(error -> Flux.error(new RuntimeException("An unexpected error occurred while searching questions: " + error.getMessage())))
-                .switchIfEmpty(Flux.error(new QuestionNotFoundException("No questions found for query: " + query)));
+        Mono<Long> totalMono = questionRepository.count();
+        Flux<Question> questionFlux = questionRepository.findByTitleContainingIgnoreCase(query, pageable);
+        Mono<List<QuestionResponseDTO>> contentMono = questionFlux.map(QuestionMapper::toResponseDTO).collectList();
+        return Mono.zip(contentMono, totalMono)
+                .map(tuple -> {
+
+                    // T1 is the list of QuestionResponseDTO, T2 is the total elements count
+                    List<QuestionResponseDTO> content = tuple.getT1();
+                    long totalElements = tuple.getT2();
+                    int totalPages = (int) Math.ceil((double) totalElements / size);
+                    return PagedQuestionResponseDTO.builder()
+                            .content(content)
+                            .page(page)
+                            .size(size)
+                            .totalElements(totalElements)
+                            .totalPages(totalPages)
+                            .build();
+                })
+                .doOnSuccess(dto -> System.out.println("Search completed for query: " + query))
+                .doOnError(error -> System.err.println("An unexpected error occurred while searching questions: " + error.getMessage()))
+                .switchIfEmpty(Mono.error(new QuestionNotFoundException("No questions found for query: " + query)));
     }
 }
