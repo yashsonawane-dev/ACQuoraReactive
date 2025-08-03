@@ -66,19 +66,17 @@ public class QuestionServiceImpl implements IQuestionService {
     }
 
     @Override
-    public Mono<PagedQuestionResponseDTO> searchQuestions(String query, int page, int size) {
+    public Mono<PagedQuestionResponseDTO<QuestionResponseDTO>> searchQuestions(String query, int page, int size) {
         Pageable pageable = Pageable.ofSize(size).withPage(page);
         Mono<Long> totalMono = questionRepository.count();
         Flux<Question> questionFlux = questionRepository.findByTitleContainingIgnoreCase(query, pageable);
         Mono<List<QuestionResponseDTO>> contentMono = questionFlux.map(QuestionMapper::toResponseDTO).collectList();
         return Mono.zip(contentMono, totalMono)
                 .map(tuple -> {
-
-                    // T1 is the list of QuestionResponseDTO, T2 is the total elements count
                     List<QuestionResponseDTO> content = tuple.getT1();
                     long totalElements = tuple.getT2();
                     int totalPages = (int) Math.ceil((double) totalElements / size);
-                    return PagedQuestionResponseDTO.builder()
+                    return PagedQuestionResponseDTO.<QuestionResponseDTO>builder()
                             .content(content)
                             .page(page)
                             .size(size)

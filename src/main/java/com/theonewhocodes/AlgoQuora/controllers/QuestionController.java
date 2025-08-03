@@ -32,7 +32,7 @@ public class QuestionController {
     }
 
     @GetMapping("/search")
-    public Mono<PagedQuestionResponseDTO> searchQuestions(
+    public Mono<PagedQuestionResponseDTO<QuestionResponseDTO>> searchQuestions(
             @RequestParam String query, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "5") int size) {
         return questionService.searchQuestions(query, page, size);
     }
