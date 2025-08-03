@@ -12,4 +12,6 @@ public interface IQuestionService {
     Mono<QuestionResponseDTO> getQuestionById(String id);
 
     Flux<QuestionResponseDTO> getAllQuestions();
+
+    Flux<QuestionResponseDTO> searchQuestions(String query, int page, int size);
 }

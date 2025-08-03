@@ -27,6 +27,12 @@ public class QuestionController {
 
     @GetMapping()
     public Flux<QuestionResponseDTO> getAllQuestions() {
-       return questionService.getAllQuestions();
+        return questionService.getAllQuestions();
+    }
+
+    @GetMapping("/search")
+    public Flux<QuestionResponseDTO> searchQuestions(
+            @RequestParam String query, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "5") int size) {
+        return questionService.searchQuestions(query, page, size);
     }
 }
