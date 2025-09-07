@@ -3,9 +3,12 @@ package com.theonewhocodes.AlgoQuora.services;
 import com.theonewhocodes.AlgoQuora.dto.PagedQuestionResponseDTO;
 import com.theonewhocodes.AlgoQuora.dto.QuestionRequestDTO;
 import com.theonewhocodes.AlgoQuora.dto.QuestionResponseDTO;
+import com.theonewhocodes.AlgoQuora.enums.TargetType;
+import com.theonewhocodes.AlgoQuora.events.ViewCountEvent;
 import com.theonewhocodes.AlgoQuora.exceptions.QuestionNotFoundException;
 import com.theonewhocodes.AlgoQuora.mapper.QuestionMapper;
 import com.theonewhocodes.AlgoQuora.models.Question;
+import com.theonewhocodes.AlgoQuora.producers.KafkaEventProducers;
 import com.theonewhocodes.AlgoQuora.repositories.QuestionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -23,6 +26,8 @@ import java.util.stream.Collectors;
 public class QuestionServiceImpl implements IQuestionService {
 
     private final QuestionRepository questionRepository;
+
+    private final KafkaEventProducers producers;
 
     @Override
     public Mono<QuestionResponseDTO> createQuestion(QuestionRequestDTO questionRequestDTO) {
@@ -45,9 +50,9 @@ public class QuestionServiceImpl implements IQuestionService {
         return questionRepository.findById(id)
                 .map(QuestionMapper::toResponseDTO)
                 .doOnSuccess(question -> {
-                    if (question != null) {
-                        System.out.println("Retrieved question: " + question.getTitle());
-                    }
+                    System.out.println("Retrieved question: " + question.getTitle());
+                    ViewCountEvent viewCountEvent = new ViewCountEvent(question.getId(), TargetType.QUESTION.toString(), LocalDateTime.now());
+                    producers.publishViewCountEvent(viewCountEvent);
                 })
                 .onErrorResume(error -> {
                     System.err.println("Error retrieving question: " + error.getMessage());
