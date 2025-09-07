@@ -46,6 +46,7 @@ public class KafkaConfig {
         configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
+        configProps.put(JsonDeserializer.TRUSTED_PACKAGES, "com.theonewhocodes.AlgoQuora.events");
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
 
